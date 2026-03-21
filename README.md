@@ -1,4 +1,4 @@
-# 🤖 KaoBot — Telegram Expense Tracker
+# KaoBot — Telegram Expense Tracker
 
 > บอท Telegram สำหรับบันทึกค่าใช้จ่ายในครอบครัว
 > A Telegram bot for tracking shared family expenses — built with **Rust**, **Supabase**, and **Gemini Vision AI**.
@@ -8,7 +8,7 @@
 
 ---
 
-## ✨ Features
+## Features
 
 | Feature              | How to use                        |
 | -------------------- | --------------------------------- |
@@ -23,7 +23,7 @@
 
 ---
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 kaobot/
@@ -48,7 +48,7 @@ kaobot/
 
 ---
 
-## 🌊 Architecture & Flow
+## Architecture & Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -86,7 +86,7 @@ Bot replies:
 
 ---
 
-## 📋 Prerequisites
+## Prerequisites
 
 | Tool                    | Version         | Notes                                                                                       |
 | ----------------------- | --------------- | ------------------------------------------------------------------------------------------- |
@@ -98,7 +98,7 @@ Bot replies:
 
 ---
 
-## 🚀 Setup (ทำครั้งเดียว)
+## Setup (ทำครั้งเดียว)
 
 ### ขั้นที่ 1 — สร้าง Telegram Bot
 
@@ -183,7 +183,7 @@ docker compose up -d --build
 
 ---
 
-## 🧪 ทดสอบ Bot ทีละฟีเจอร์
+## ทดสอบ Bot ทีละฟีเจอร์
 
 Bot พร้อมใช้งานทันทีหลัง restart ไม่ต้องทำขั้นตอนเพิ่มเติมใดๆ ทดสอบได้เลยใน **กลุ่ม Telegram** ที่เพิ่ม bot ไว้:
 
@@ -271,7 +271,7 @@ Bot ควรตอบ:
 
 ---
 
-## 🐳 Docker Workflow
+## Docker Workflow
 
 ### ดู logs แบบ real-time
 
@@ -299,7 +299,7 @@ docker compose ps
 
 ---
 
-## 🦀 Running Natively (ไม่ใช้ Docker)
+## Running Natively (ไม่ใช้ Docker)
 
 ```bash
 # ติดตั้ง Rust (ถ้ายังไม่มี)
@@ -315,7 +315,7 @@ cargo build --release
 
 ---
 
-## 🧑‍💻 Development Commands
+## Development Commands
 
 ```bash
 # รัน unit tests (10 tests)
@@ -333,7 +333,7 @@ cargo fmt --check
 
 ---
 
-## 🤖 Bot Commands Reference
+## Bot Commands Reference
 
 | Command      | Description                              |
 | ------------ | ---------------------------------------- |
@@ -367,7 +367,7 @@ cargo fmt --check
 
 ---
 
-## 🗄️ Database Schema
+## Database Schema
 
 รัน `schema.sql` ใน Supabase SQL Editor ครั้งเดียวเพื่อสร้าง:
 
@@ -380,7 +380,7 @@ cargo fmt --check
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Bot ไม่ตอบข้อความในกลุ่ม
 
@@ -428,7 +428,7 @@ docker compose up --build
 
 ---
 
-## 📝 Notes
+## Notes
 
 - Bot ใช้ **Long Polling** — ไม่ต้องมี public IP หรือ webhook
 - รูปสลิปถูกส่งให้ Gemini API อ่านชั่วคราว ไม่ได้เก็บไว้ที่ใด
