@@ -2,6 +2,7 @@
 // ParseMode::Markdown is intentionally used (see main.rs for rationale).
 #![allow(deprecated)]
 
+use std::cmp::Reverse;
 use anyhow::Result;
 use teloxide::{prelude::*, utils::command::BotCommands};
 use tracing::error;
@@ -149,7 +150,7 @@ pub async fn handle_history(bot: Bot, msg: Message, config: BotConfig) -> Result
 
     match supabase::get_pending_expenses(&config, chat_id.0).await {
         Ok(mut expenses) => {
-            expenses.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+            expenses.sort_by_key(|b| Reverse(b.created_at));
             let recent: Vec<_> = expenses.into_iter().take(10).collect();
 
             if recent.is_empty() {
