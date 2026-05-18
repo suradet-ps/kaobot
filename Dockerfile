@@ -24,7 +24,7 @@ ENV OPENSSL_VERSION=3.3.2
 RUN wget https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz \
     && tar xzf openssl-${OPENSSL_VERSION}.tar.gz \
     && cd openssl-${OPENSSL_VERSION} \
-    && CC="musl-gcc -idirafter /usr/include -fPIE -pie" ./Configure no-shared no-async --prefix=/musl --openssldir=/musl/ssl linux-generic64 \
+    && CC="musl-gcc -fPIE -pie" ./Configure no-shared no-async no-mmap --prefix=/musl --openssldir=/musl/ssl linux-generic64 \
     && make -j$(nproc) \
     && make install_sw \
     && cd .. \
