@@ -7,33 +7,10 @@ WORKDIR /app
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
-    musl-tools \
     pkg-config \
-    libssl-dev \
-    wget \
     build-essential \
-    perl \
-    linux-libc-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-
-# Add musl target
-RUN rustup target add x86_64-unknown-linux-musl
-
-# Build musl-compatible OpenSSL from source
-ENV OPENSSL_VERSION=3.3.2
-RUN wget https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz \
-    && tar xzf openssl-${OPENSSL_VERSION}.tar.gz \
-    && cd openssl-${OPENSSL_VERSION} \
-    && CC="musl-gcc -fPIE -pie" ./Configure no-shared no-async no-mmap --prefix=/musl --openssldir=/musl/ssl linux-generic64 \
-    && make -j$(nproc) \
-    && make install_sw \
-    && cd .. \
-    && rm -rf openssl-${OPENSSL_VERSION} openssl-${OPENSSL_VERSION}.tar.gz
-
-# Point openssl-sys to the musl-compatible OpenSSL
-ENV OPENSSL_DIR=/musl \
-    OPENSSL_STATIC=1 \
-    PKG_CONFIG_ALLOW_CROSS=1
 
 # -------------------------
 # Cache dependencies
@@ -42,7 +19,7 @@ COPY Cargo.toml Cargo.lock ./
 
 RUN mkdir -p src \
     && echo 'fn main() {}' > src/main.rs \
-    && cargo build --release --target x86_64-unknown-linux-musl \
+    && cargo build --release \
     && rm -rf src
 
 # -------------------------
@@ -52,18 +29,22 @@ COPY src ./src
 
 # Rebuild actual application
 RUN touch src/main.rs \
-    && cargo build --release --target x86_64-unknown-linux-musl
+    && cargo build --release
 
 # =========================
 # Runtime Stage
 # =========================
-FROM scratch
+FROM debian:trixie-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy CA certificates (important for HTTPS requests)
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # Copy compiled binary
-COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/kaobot /kaobot
+COPY --from=builder /app/target/release/kaobot /kaobot
 
 # Environment variables
 ENV RUST_LOG="kaobot=info,teloxide=warn"
