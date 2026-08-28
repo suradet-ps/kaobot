@@ -1,50 +1,65 @@
 # KaoBot
 
-> A Telegram bot for tracking shared household expenses. Built with Rust, Supabase, and Gemini Vision AI.
-
-[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange)](https://www.rust-lang.org/)
-[![Edition](https://img.shields.io/badge/edition-2024-blue)](https://doc.rust-lang.org/edition-guide/rust-2024/)
-[![CI](https://github.com/suradet-ps/kaobot/actions/workflows/ci.yml/badge.svg)](https://github.com/suradet-ps/kaobot/actions/workflows/ci.yml)
-
-## Features
-
-| Feature | Usage |
-|---|---|
-| Log expenses | Type `rice 60` or `coffee 65.50` |
-| View pending balance | `/summary` |
-| Today's items | `/today` |
-| Recent history | `/history` |
-| Record a transfer | `/paid 500` |
-| Auto-read slips | Send a bank slip photo |
-| Cancel an item | `/cancel 42` |
-| Clear all | `/clear` |
-
-## Quick Start
-
-### 1. Create a Telegram Bot
-
-1. Message [@BotFather](https://t.me/botfather) with `/newbot`
-2. Add the bot to your group and make it **Admin** (required to read group messages)
-
-### 2. Set Up Supabase
-
-1. Create a project at [supabase.com](https://supabase.com)
-2. Run `schema.sql` in the SQL Editor
-3. Copy **Project URL** and **anon public** key from Settings → API
-
-### 3. Get a Gemini API Key
-
-Create a key at [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey). Free tier covers 1,500 requests/day.
-
-### 4. Configure
-
-```bash
-cp .env.example .env
+```
+██╗  ██╗ █████╗  ██████╗ ██████╗  ██████╗ ████████╗
+██║ ██╔╝██╔══██╗██╔═══██╗██╔══██╗██╔═══██╗╚══██╔══╝
+█████╔╝ ███████║██║   ██║██████╔╝██║   ██║   ██║
+██╔═██╗ ██╔══██║██║   ██║██╔══██╗██║   ██║   ██║
+██║  ██╗██║  ██║╚██████╔╝██████╔╝╚██████╔╝   ██║
+╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═════╝ ╚═════╝   ╚═╝
 ```
 
-Edit `.env`:
+---
 
-```env
+## ◆ PULSE
+
+Shared expenses die in group chats: a message of who owes what, buried
+under memes, forgotten by payday. KaoBot turns the household group chat
+into a ledger. Type `rice 60`, send the bank slip photo and watch Gemini
+read the amount off it, ask `/summary` and get the truth - who spent,
+who paid, what is still owed. One bot in the group, each chat with its
+own isolated ledger, no webhook, no public IP, no excuses.
+
+| Ledger ▣ | Slips ▣ | Credit ▣ | Isolation ▣ |
+|---|---|---|---|
+
+*The core loop - log, read, settle, summarize - is sealed and serving.*
+
+> Built with Rust 2024 + Teloxide, stored in Supabase, reading slips
+> through Gemini Vision - long polling, so it runs anywhere.
+>
+> **suradet-ps**, artifact keeper
+
+---
+
+## ◆ IGNITION
+
+Five keys, one container.
+
+```
+⟫ docker compose up --build
+```
+
+Send any message in the group, read the `chat_id` from the logs, lock it
+into `.env`, then:
+
+```
+⟫ docker compose up -d --build
+```
+
+<details>
+<summary>Setup</summary>
+
+1. Create the bot with [@BotFather](https://t.me/botfather) (`/newbot`)
+   and make it **Admin** in the group - required to read group messages.
+2. Create a [Supabase](https://supabase.com) project, run `schema.sql`
+   in the SQL Editor, copy the Project URL and anon key.
+3. Create a Gemini API key at
+   [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+   (free tier covers 1,500 requests/day).
+4. `cp .env.example .env` and fill:
+
+```
 TELOXIDE_TOKEN=<from BotFather>
 SUPABASE_URL=<project URL>
 SUPABASE_ANON_KEY=<anon key>
@@ -52,184 +67,81 @@ GEMINI_API_KEY=<your key>
 ALLOWED_CHAT_ID=          # leave empty for now
 ```
 
-### 5. Find Your Chat ID
+</details>
 
-```bash
-docker compose up --build
-```
+---
 
-Send any message in your group, then check logs for:
+## ◆ ANATOMY
 
-```
-INFO kaobot: Message from chat_id: -1001234567890
-```
+Five small files, one honest boundary: the chat says it, the ledger
+remembers it.
 
-### 6. Lock to Your Group
+- **Parses** - `parser.rs` reads `item amount` from plain text: `rice 60`,
+  `coffee 65.50`, `household supplies 320`. Multi-word names and Thai
+  text parse; amounts must be above zero and under a million; anything
+  else is silently ignored - no noise, no false entries.
+- **Reads** - `slip.rs` sends a bank transfer screenshot to Gemini
+  Vision and gets the amount back. The image is temporary and never
+  stored; when the machine cannot read the slip, the human still has
+  `/paid <amount>`.
+- **Ledgers** - `supabase.rs` writes expenses, payments, and credit
+  against `chat_id`: every group has its own ledger, and overpayment
+  becomes credit that future expenses consume automatically.
+- **Settles** - `/paid 500` clears all pending items; an overpayment is
+  kept honestly as credit instead of vanishing into the void.
+- **Answers** - `/summary`, `/today` (Asia/Bangkok time), `/history`,
+  `/cancel <id>`, `/clear` - the commands of a household that keeps its
+  books.
 
-Stop the bot (`Ctrl+C`), set `ALLOWED_CHAT_ID` in `.env`, then:
+---
 
-```bash
-docker compose up -d --build
-```
+## ◆ RITUALS
 
-## Usage
+**The core ceremony** - the daily ledger:
 
-### Log an Expense
+1. Type it: `rice 60`. The parser understands; the entry lands.
+2. Pay it: send the slip photo. Gemini reads the amount and settles the
+   balance automatically - or the `/paid` fallback speaks for it.
+3. Ask it: `/summary` reports every pending item with its total. Who
+   owes what is no longer a memory, it is a query.
+4. Close it: overpaid? The excess waits as credit and eats the next
+   expense on its own.
 
-Just type the item name and amount separated by a space:
+**The ceremony of the slip** - the receipt is read by a machine and seen
+by no one else. The image goes to Gemini for a moment and is never
+stored; the ledger keeps only the number.
 
-```
-rice 60
-coffee 65.50
-household supplies 320
-```
+**The ceremony of the group** - `ALLOWED_CHAT_ID` locks the bot to one
+chat. A ledger is only honest when it is private, and only useful when
+it is exactly where the household already talks.
 
-Multi-word names and Thai text are supported. Amounts must be > 0 and ≤ 1,000,000. Messages that don't match this format are silently ignored.
+---
 
-### Record a Payment
+## ◆ ECHOES
 
-```
-/paid 500
-```
-
-Clears all pending items. If you overpay, the excess is stored as credit and auto-applied to future expenses.
-
-### Send a Slip
-
-Send a bank transfer screenshot to the group. Gemini reads the amount and settles automatically. If the amount can't be read, use `/paid <amount>` as a fallback.
-
-### Commands
-
-| Command | Description |
-|---|---|
-| `/help` | Show all commands |
-| `/summary` | All pending items with total |
-| `/today` | Today's items (Asia/Bangkok time) |
-| `/history` | Last 10 pending items |
-| `/paid <amount>` | Record a transfer and clear all |
-| `/cancel <id>` | Remove a specific item |
-| `/clear` | Clear all (no payment record) |
-
-## Project Structure
+**Where this artifact is heading**
 
 ```
-kaobot/
-├── src/
-│   ├── main.rs         # Entry point, config, message routing
-│   ├── commands.rs     # Command handlers (/summary, /paid, /cancel, …)
-│   ├── parser.rs       # Parse "item amount" text format
-│   ├── supabase.rs     # Supabase REST API client
-│   └── slip.rs         # Gemini Vision API — read bank slip images
-├── schema.sql          # Supabase schema (run once)
-├── Cargo.toml
-├── Dockerfile          # Multi-stage build
-├── docker-compose.yml
-└── .env.example
+logging   ▸ "item amount" parsing, Thai and multi-word ───────────── ▸ sealed
+reading   ▸ Gemini slip OCR with /paid fallback ───────────────────── ▸ sealed
+settling  ▸ payments, credit carry-over, per-chat ledgers ─────────── ▸ sealed
+asking    ▸ summary, today, history, cancel, clear ────────────────── ▸ sealed
 ```
 
-## Architecture
+**Raising the artifact** - the schema is `schema.sql`, the config is
+`.env.example`, the gates are `cargo test`, `cargo clippy --all-targets
+-- -D warnings`, and `cargo fmt`. Open an issue first to discuss a
+change.
+
+**Status** - CI gates every push. [Watch the gates](.github/workflows).
+
+---
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Telegram Chat                        │
-└──────────────────────┬──────────────────┬───────────────────┘
-                       │ text message     │ photo (slip)
-                       ▼                  ▼
-              ┌────────────────┐  ┌────────────────────┐
-              │  parser.rs     │  │   slip.rs           │
-              │ parse_expense()│  │ Gemini Vision API   │
-              │ "rice 60"      │  │ → amount: 500       │
-              └───────┬────────┘  └────────┬────────────┘
-                      │                    │
-                      ▼                    ▼
-              ┌────────────────────────────────────┐
-              │           supabase.rs              │
-              │  insert_expense()                  │
-              │  insert_payment() + clear_all()    │
-              │  get_pending_total()               │
-              └────────────────────────────────────┘
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │  Supabase DB    │
-                    │  (PostgreSQL)   │
-                    │  expenses       │
-                    │  payments       │
-                    │  pending_summary│
-                    └─────────────────┘
+  ─────────────────────────────────────────
+   A household that keeps its books
+   has nothing to fight about.
+  ─────────────────────────────────────────
 ```
 
-## Docker
-
-```bash
-# Start
-docker compose up -d --build
-
-# View logs
-docker compose logs -f
-
-# Stop
-docker compose down
-
-# Rebuild after config change
-docker compose down && docker compose up -d --build
-```
-
-## Running Natively
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-cargo run
-cargo build --release
-```
-
-## Development
-
-```bash
-cargo test
-cargo clippy --all-targets -- -D warnings
-cargo fmt
-```
-
-## Database Schema
-
-Run `schema.sql` once in Supabase SQL Editor. It creates:
-
-| Object | Type | Purpose |
-|---|---|---|
-| `expenses` | table | Individual expense items |
-| `payments` | table | Transfer/payment records |
-| `credit_balance` | table | Overpayment credit per chat |
-| `pending_summary` | view | Pending totals grouped by chat |
-| `daily_summary` | view | Daily expense summary |
-
-## Troubleshooting
-
-**Bot doesn't respond in group**
-- Make sure the bot is an **Admin** in the group
-- Verify `TELOXIDE_TOKEN` and `ALLOWED_CHAT_ID` in `.env`
-- Check logs: `docker compose logs -f`
-
-**"SUPABASE_URL must be set"**
-- Ensure `.env` is in the same directory as `docker-compose.yml`
-- No spaces around `=` in `.env`
-
-**Slip reading fails**
-- Verify `GEMINI_API_KEY` is valid and has quota remaining
-- Use a direct screenshot from your banking app (not a photo of a screen)
-- Fall back to `/paid <amount>`
-
-**Expense saves but bot replies with error**
-- Confirm `schema.sql` was run in Supabase
-- Check RLS policies: both `expenses` and `payments` tables need a permissive policy for the anon key
-
-## Notes
-
-- Uses **Long Polling** — no public IP or webhook needed
-- Slip images are sent to Gemini temporarily and never stored
-- Each `chat_id` has its own isolated ledger
-- `ALLOWED_CHAT_ID` is optional but recommended
-
-## License
-
-MIT
+MIT License.
