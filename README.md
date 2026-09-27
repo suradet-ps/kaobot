@@ -1,13 +1,11 @@
 # KaoBot
 
-```
-██╗  ██╗ █████╗  ██████╗ ██████╗  ██████╗ ████████╗
-██║ ██╔╝██╔══██╗██╔═══██╗██╔══██╗██╔═══██╗╚══██╔══╝
-█████╔╝ ███████║██║   ██║██████╔╝██║   ██║   ██║
-██╔═██╗ ██╔══██║██║   ██║██╔══██╗██║   ██║   ██║
-██║  ██╗██║  ██║╚██████╔╝██████╔╝╚██████╔╝   ██║
-╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═════╝ ╚═════╝   ╚═╝
-```
+[![CI](https://github.com/suradet-ps/kaobot/actions/workflows/ci.yml/badge.svg)](https://github.com/suradet-ps/kaobot/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Rust: stable](https://img.shields.io/badge/rust-stable-orange.svg?logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Teloxide v0.17](https://img.shields.io/badge/Teloxide-v0.17-blue.svg)](https://github.com/teloxide/teloxide)
+[![Supabase](https://img.shields.io/badge/Supabase-3FCF8E.svg?logo=supabase&logoColor=white)](https://supabase.com/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/suradet-ps/kaobot/issues)
 
 ---
 
